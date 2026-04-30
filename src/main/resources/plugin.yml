@@ -1,0 +1,17 @@
+name: ReFrame
+version: 8
+main: me.eereeska.reframe.ReFrame
+api-version: 1.21
+authors: [ eereeska ]
+description: Advanced ItemFrames
+
+permissions:
+  reframe.toggle.visibility:
+    description: Allows toggling item frame visibility
+    default: op
+  reframe.toggle.fixation:
+    description: Allows toggling item frame fixation
+    default: op
+  reframe.clickthrough:
+    description: Allows clicking through invisible item frames
+    default: op
