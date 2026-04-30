@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
 public class PlayerInteractAtEntityEventListener implements Listener {
@@ -22,13 +23,6 @@ public class PlayerInteractAtEntityEventListener implements Listener {
         this.plugin = plugin;
     }
 
-    /**
-     * Handles right-clicking on an ItemFrame.
-     *
-     * - Shift + right-click  → open the ReFrame settings menu (visibility / fixation)
-     * - Right-click on an INVISIBLE frame (no shift) → cancel the frame interaction and
-     *   simulate a block right-click so containers behind the frame open normally.
-     */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onItemFrameInteract(PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof ItemFrame itemFrame)) return;
@@ -36,7 +30,6 @@ public class PlayerInteractAtEntityEventListener implements Listener {
 
         Player player = event.getPlayer();
 
-        // ── Shift + right-click: open settings menu ─────────────────────────
         if (player.isSneaking()) {
             boolean hasVisibility = player.hasPermission(
                     plugin.getConfig().getString("permissions.visibility", "reframe.toggle.visibility"));
@@ -51,27 +44,22 @@ public class PlayerInteractAtEntityEventListener implements Listener {
             return;
         }
 
-        // ── Regular right-click on an invisible frame ────────────────────────
         if (!itemFrame.isVisible()) {
             String clickthroughPerm = plugin.getConfig().getString(
                     "permissions.clickthrough", "reframe.clickthrough");
 
             if (player.hasPermission(clickthroughPerm)) {
-                // The frame is attached to a face of its block; the container the player
-                // wants is on the OPPOSITE side of that block.
                 BlockFace attachedFace = itemFrame.getAttachedFace();
                 Block blockBehind = itemFrame.getLocation().getBlock()
                         .getRelative(attachedFace.getOppositeFace());
                 BlockState state = blockBehind.getState();
 
-                if (state instanceof InventoryHolder) {
-                    // Cancel the entity interaction so the frame doesn't consume the click,
-                    // then simulate a normal block right-click to open the container.
+                if (state instanceof InventoryHolder inventoryHolder) {
                     event.setCancelled(true);
-                    player.simulateBlockInteract(blockBehind, attachedFace);
+                    Inventory inv = inventoryHolder.getInventory();
+                    player.openInventory(inv);
                 }
             }
         }
-        // Visible frames fall through — vanilla behaviour applies.
     }
 }
